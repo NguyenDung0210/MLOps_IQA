@@ -87,7 +87,7 @@ def train():
 
             print(f"Epoch {ep+1}: loss={avg_loss:.4f}, mae={mae:.4f}")
 
-        mlflow.pytorch.log_model(model, "model")
+        mlflow.pytorch.log_model(model, name="model")
 
 if __name__ == "__main__":
     train()
