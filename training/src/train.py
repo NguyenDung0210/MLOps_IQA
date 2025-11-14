@@ -13,13 +13,16 @@ import numpy as np
 from dataset import KonIQDataset
 from model import build_model
 
+
 CSV = "training/data/koniq10k_distributions_sets.csv"
 IMG = "training/data/koniq10k_512x384/"
+
 
 EPOCHS = 15
 BATCH = 16
 LR = 1e-4
-MODEL_NAME = "efficientnet_b0"  # CHANGE HERE
+MODEL_NAME = "efficientnet_b0"  # efficientnet_b0 / resnet18 / mobilenet_v2
+
 
 def compute_metrics(preds, targets):
     preds = np.array(preds).flatten()
@@ -38,23 +41,49 @@ def compute_metrics(preds, targets):
 
     return mae, rmse, sp, pr
 
+
+def evaluate(model, dataloader, device):
+    model.eval()
+    preds, targets = [], []
+
+    with torch.no_grad():
+        for imgs, mos in dataloader:
+            imgs = imgs.to(device, dtype=torch.float32)
+            mos = mos.to(device)
+
+            pred = model(imgs).squeeze(-1)
+
+            preds.extend(pred.cpu().numpy())
+            targets.extend(mos.cpu().numpy())
+
+    return compute_metrics(preds, targets)
+
+
 def train():
     mlflow.set_experiment("koniq_iqa")
 
     run_name = f"{MODEL_NAME}_lr{LR}_bs{BATCH}_ep{EPOCHS}"
     with mlflow.start_run(run_name=run_name):
-        mlflow.log_param("model_name", MODEL_NAME)
-        mlflow.log_param("epochs", EPOCHS)
-        mlflow.log_param("batch_size", BATCH)
-        mlflow.log_param("lr", LR)
+        mlflow.log_params({
+            "model_name": MODEL_NAME,
+            "epochs": EPOCHS,
+            "batch_size": BATCH,
+            "lr": LR
+        })
 
         device = "cuda" if torch.cuda.is_available() else "cpu"
         print(f"Using device: {device}\n")
         mlflow.log_param("device", device)
+
         model = build_model(MODEL_NAME).to(device)
 
         train_ds = KonIQDataset(CSV, IMG, split="training")
+        val_ds   = KonIQDataset(CSV, IMG, split="validation")
+        test_ds  = KonIQDataset(CSV, IMG, split="test")
+
         train_dl = DataLoader(train_ds, batch_size=BATCH, shuffle=True, num_workers=4, pin_memory=True)
+        val_dl   = DataLoader(val_ds, batch_size=BATCH, shuffle=False, num_workers=4, pin_memory=True)
+        test_dl  = DataLoader(test_ds, batch_size=BATCH, shuffle=False, num_workers=4, pin_memory=True)
 
         criterion = nn.MSELoss()
         optimizer = optim.Adam(model.parameters(), lr=LR)
@@ -83,19 +112,39 @@ def train():
                 all_preds.extend(pred.detach().cpu().numpy())
                 all_targets.extend(mos.cpu().numpy())
 
-            avg_loss = epoch_loss / len(train_dl)
+            train_loss = epoch_loss / len(train_dl)
+            train_mae, train_rmse, train_sp, train_pr = compute_metrics(all_preds, all_targets)
 
-            mae, rmse, sp, pr = compute_metrics(all_preds, all_targets)
+            mlflow.log_metric("train_loss", train_loss, step=ep)
+            mlflow.log_metric("train_mae", train_mae, step=ep)
+            mlflow.log_metric("train_rmse", train_rmse, step=ep)
+            mlflow.log_metric("train_spearman", train_sp, step=ep)
+            mlflow.log_metric("train_pearson", train_pr, step=ep)
 
-            mlflow.log_metric("loss", avg_loss, step=ep)
-            mlflow.log_metric("mae", mae, step=ep)
-            mlflow.log_metric("rmse", rmse, step=ep)
-            mlflow.log_metric("spearman", sp, step=ep)
-            mlflow.log_metric("pearson", pr, step=ep)
+            val_mae, val_rmse, val_sp, val_pr = evaluate(model, val_dl, device)
 
-            print(f"Epoch {ep+1}: loss={avg_loss:.4f}, mae={mae:.4f}")
+            mlflow.log_metric("val_mae", val_mae, step=ep)
+            mlflow.log_metric("val_rmse", val_rmse, step=ep)
+            mlflow.log_metric("val_spearman", val_sp, step=ep)
+            mlflow.log_metric("val_pearson", val_pr, step=ep)
+
+            print(
+                f"Epoch {ep+1}: "
+                f"train_loss={train_loss:.4f}, train_mae={train_mae:.4f} | "
+                f"val_mae={val_mae:.4f}, val_rmse={val_rmse:.4f}"
+            )
+        
+        test_mae, test_rmse, test_sp, test_pr = evaluate(model, test_dl, device)
+
+        mlflow.log_metric("test_mae", test_mae)
+        mlflow.log_metric("test_rmse", test_rmse)
+        mlflow.log_metric("test_spearman", test_sp)
+        mlflow.log_metric("test_pearson", test_pr)
+
+        print(f"\n[TEST] mae={test_mae:.4f}, rmse={test_rmse:.4f}, sp={test_sp:.4f}")
 
         mlflow.pytorch.log_model(model, name="model")
+
 
 if __name__ == "__main__":
     train()
