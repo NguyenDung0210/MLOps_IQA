@@ -5,6 +5,7 @@ from torch.utils.data import DataLoader
 
 import mlflow
 import mlflow.pytorch
+from mlflow.tracking import MlflowClient
 
 from scipy.stats import pearsonr, spearmanr
 from tqdm import tqdm
@@ -18,7 +19,7 @@ CSV = "training/data/koniq10k_distributions_sets.csv"
 IMG = "training/data/koniq10k_512x384/"
 
 
-EPOCHS = 15
+EPOCHS = 100
 BATCH = 16
 LR = 1e-4
 MODEL_NAME = "efficientnet_b0"  # efficientnet_b0 / resnet18 / mobilenet_v2
@@ -145,6 +146,22 @@ def train():
 
         mlflow.pytorch.log_model(model, name="model")
 
+        run_id = mlflow.active_run().info.run_id
+        model_uri = f"runs:/{run_id}/model"
+
+        registered = mlflow.register_model(
+            model_uri=model_uri,
+            name="koniq_iqa_model"
+        )
+
+        print(f"\nRegistered model version: {registered.version}")
+
+        client = MlflowClient()
+        client.transition_model_version_stage(
+            name="koniq_iqa_model",
+            version=registered.version,
+            stage="Staging"
+        )
 
 if __name__ == "__main__":
     train()
