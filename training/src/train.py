@@ -26,9 +26,15 @@ def compute_metrics(preds, targets):
     targets = np.array(targets).flatten()
 
     mae = np.mean(np.abs(preds - targets))
-    rmse = np.sqrt(np.mean((preds - targets)**2))
-    sp, _ = spearmanr(preds, targets)
-    pr, _ = pearsonr(preds, targets)
+    rmse = np.sqrt(np.mean((preds - targets) ** 2))
+
+    sp = spearmanr(preds, targets).correlation
+    if np.isnan(sp):
+        sp = 0.0
+
+    pr = pearsonr(preds, targets)[0]
+    if np.isnan(pr):
+        pr = 0.0
 
     return mae, rmse, sp, pr
 
@@ -48,7 +54,7 @@ def train():
         model = build_model(MODEL_NAME).to(device)
 
         train_ds = KonIQDataset(CSV, IMG, split="training")
-        train_dl = DataLoader(train_ds, batch_size=BATCH, shuffle=True)
+        train_dl = DataLoader(train_ds, batch_size=BATCH, shuffle=True, num_workers=4, pin_memory=True)
 
         criterion = nn.MSELoss()
         optimizer = optim.Adam(model.parameters(), lr=LR)
@@ -61,10 +67,12 @@ def train():
             all_targets = []
 
             for imgs, mos in tqdm(train_dl, desc=f"Epoch {ep+1}"):
-                imgs, mos = imgs.to(device), mos.to(device)
+                imgs = imgs.to(device, dtype=torch.float32)
+                mos = mos.to(device)
 
                 optimizer.zero_grad()
                 pred = model(imgs)
+                pred = pred.squeeze(-1) # (B,1) -> (B,)
 
                 loss = criterion(pred, mos)
                 loss.backward()
