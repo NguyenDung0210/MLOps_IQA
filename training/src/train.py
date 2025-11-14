@@ -16,7 +16,7 @@ from model import build_model
 CSV = "training/data/koniq10k_distributions_sets.csv"
 IMG = "training/data/koniq10k_512x384/"
 
-EPOCHS = 3
+EPOCHS = 15
 BATCH = 16
 LR = 1e-4
 MODEL_NAME = "efficientnet_b0"  # CHANGE HERE
