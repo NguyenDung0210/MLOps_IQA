@@ -153,15 +153,20 @@ def train():
             model_uri=model_uri,
             name="koniq_iqa_model"
         )
-
         print(f"\nRegistered model version: {registered.version}")
 
         client = MlflowClient()
-        client.transition_model_version_stage(
+        client.update_model_version(
             name="koniq_iqa_model",
             version=registered.version,
-            stage="Staging"
+            description="Added to staging alias"
+        )
+        client.set_registered_model_tag(
+            name="koniq_iqa_model",
+            key="alias",
+            value="staging"
         )
 
+        
 if __name__ == "__main__":
     train()
