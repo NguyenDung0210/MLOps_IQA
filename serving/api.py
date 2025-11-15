@@ -10,10 +10,12 @@ import uvicorn
 app = FastAPI()
 
 
-MODEL_NAME = "koniq_iqa_model"
-MODEL_STAGE = "Staging"
+mlflow.set_tracking_uri("http://127.0.0.1:5000")
 
-model_uri = f"models:/{MODEL_NAME}/{MODEL_STAGE}"
+MODEL_NAME = "koniq_iqa_model"
+MODEL_ALIAS = "staging"
+
+model_uri = f"models:/{MODEL_NAME}@{MODEL_ALIAS}"
 model = mlflow.pytorch.load_model(model_uri)
 model.eval()
 
