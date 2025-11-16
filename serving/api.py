@@ -1,9 +1,9 @@
-# import io
-# import torch
-# import mlflow.pytorch
-# from PIL import Image
+import io
+import torch
+import mlflow.pytorch
+from PIL import Image
 from fastapi import FastAPI, File, UploadFile, HTTPException
-# from torchvision import transforms
+from torchvision import transforms
 import uvicorn
 
 

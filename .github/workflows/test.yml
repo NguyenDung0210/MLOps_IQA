@@ -24,6 +24,7 @@ jobs:
         python-version: 3.11
     - name: Install dependencies
       run: |
+        pip install -r training/requirements.txt
         pip install -r serving/requirements.txt
     - name: Run tests
       run: pytest --cov
