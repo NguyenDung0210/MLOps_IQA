@@ -2,7 +2,7 @@ import io
 import torch
 import mlflow.pytorch
 from PIL import Image
-from fastapi import FastAPI, File, UploadFile
+from fastapi import FastAPI, File, UploadFile, HTTPException
 from torchvision import transforms
 import uvicorn
 
@@ -15,8 +15,11 @@ mlflow.set_tracking_uri("http://127.0.0.1:5000")
 MODEL_NAME = "koniq_iqa_model"
 MODEL_ALIAS = "staging"
 
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+
 model_uri = f"models:/{MODEL_NAME}@{MODEL_ALIAS}"
 model = mlflow.pytorch.load_model(model_uri)
+model = model.to(device)
 model.eval()
 
 
@@ -33,10 +36,17 @@ transform = transforms.Compose([
 
 @app.post("/predict")
 async def predict(file: UploadFile = File(...)):
+    # Validate file type
+    if file.content_type not in ["image/jpeg", "image/png"]:
+        raise HTTPException(status_code=400, detail="File must be JPEG or PNG")
+    
     img_bytes = await file.read()
-    img = Image.open(io.BytesIO(img_bytes)).convert("RGB")
+    try:
+        img = Image.open(io.BytesIO(img_bytes)).convert("RGB")
+    except Exception:
+        raise HTTPException(status_code=400, detail="Invalid image file")
 
-    x = transform(img).unsqueeze(0)  # [1, 3, 512, 384]
+    x = transform(img).unsqueeze(0).to(device)  # [1, 3, 512, 384]
     with torch.no_grad():
         pred = model(x)  # IQA score
     
@@ -47,4 +57,4 @@ async def predict(file: UploadFile = File(...)):
 
 
 if __name__ == "__main__":
-    uvicorn.run("serve:app", host="0.0.0.0", port=8000, reload=True)
+    uvicorn.run("api:app", host="0.0.0.0", port=8000, reload=True)
