@@ -17,10 +17,10 @@ MODEL_ALIAS = "staging"
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-model_uri = f"models:/{MODEL_NAME}@{MODEL_ALIAS}"
-model = mlflow.pytorch.load_model(model_uri)
-model = model.to(device)
-model.eval()
+def load_model():
+    model_uri = f"models:/{MODEL_NAME}@{MODEL_ALIAS}"
+    model = mlflow.pytorch.load_model(model_uri)
+    return model.to(device)
 
 
 transform = transforms.Compose([
@@ -32,6 +32,11 @@ transform = transforms.Compose([
         std=[0.229, 0.224, 0.225],
     ),
 ])
+
+
+@app.get("/")
+def root():
+    return {"message": "Hello, FastAPI!"}
 
 
 @app.post("/predict")
@@ -57,4 +62,6 @@ async def predict(file: UploadFile = File(...)):
 
 
 if __name__ == "__main__":
+    model = load_model()
+    model.eval()
     uvicorn.run("api:app", host="0.0.0.0", port=8000, reload=True)
