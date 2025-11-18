@@ -1,5 +1,5 @@
 from fastapi import FastAPI
-from routes.health import router as health_router
+from routers.health import health_router
 from routers.predict import predict_router
 from routers.root import root_router
 import uvicorn
