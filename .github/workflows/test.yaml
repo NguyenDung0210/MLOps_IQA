@@ -5,8 +5,8 @@ on:
     paths:
       - 'training/**/*'
       - 'serving/**/*'
-      - 'tests/*'
-      - 'infra/*'
+      - 'tests/**/*'
+      - 'infra/**/*'
       - '.github/workflows/test.yaml'
   push:
     branches:
@@ -18,13 +18,19 @@ jobs:
     steps:
     - name: Checkout code
       uses: actions/checkout@v3
-    - name: Set up Python
+    - name: Setup Python
       uses: actions/setup-python@v4
       with:
         python-version: 3.11
+    - name: Setup Cache
+      uses: actions/cache@v3
+      with:
+        path: ~/.cache/pip
+        key: ${{ runner.os }}-pip-${{ hashFiles('requirements.txt') }}
+        restore-keys: |
+          ${{ runner.os }}-pip-
     - name: Install dependencies
       run: |
-        pip install -r training/requirements.txt
-        pip install -r serving/requirements.txt
+        pip install -r requirements.txt
     - name: Run tests
       run: pytest --cov

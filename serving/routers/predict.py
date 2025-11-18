@@ -9,8 +9,13 @@ from serving.utils.load_model import load_model, device
 predict_router = APIRouter()
 
 
-model = load_model()
-model.eval()
+model = None   # lazy load
+
+def get_model():
+    global model
+    if model is None:
+        model = load_model()
+    return model
 
 
 transform = transforms.Compose([
@@ -37,6 +42,8 @@ async def predict(file: UploadFile = File(...)):
         raise HTTPException(status_code=400, detail="Invalid image file")
 
     x = transform(img).unsqueeze(0).to(device)  # [1, 3, 512, 384]
+
+    model = get_model()
     with torch.no_grad():
         pred = model(x)  # IQA score
     
