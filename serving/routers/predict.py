@@ -3,7 +3,7 @@ import torch
 from PIL import Image
 from fastapi import APIRouter, File, UploadFile, HTTPException
 from torchvision import transforms
-from utils.load_model import load_model, device
+from serving.utils.load_model import load_model, device
 
 
 predict_router = APIRouter()
