@@ -39,7 +39,7 @@ jobs:
       REPOSITORY: mlops-mlflow-image-102
       SERVICE_NAME: mlops-mlflow-server
       SERVICE_ACCOUNT: mlflow-server@mlops-477313.iam.gserviceaccount.com
-      CONNECTOR: mlops-vpc-connect-102
+      CONNECTOR: mlops-vpc-connector-102
       PORT: 5000
       SA_KEY_NAME: mlflow_server_key
     
