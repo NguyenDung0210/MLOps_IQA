@@ -28,8 +28,9 @@ jobs:
         pip install -r requirements.txt
     - name: Run tests
       run: pytest --cov
+  
   deploy:
-    needs: test_job
+    needs: test
     runs-on: ubuntu-latest
 
     env:
