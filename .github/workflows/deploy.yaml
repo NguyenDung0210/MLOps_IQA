@@ -1,0 +1,60 @@
+name: code
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    name: Build & Deploy MLflow
+    runs-on: ubuntu-latest
+
+    env:
+      REGION: us-central1
+      PROJECT_ID: mlops-477313
+      REPOSITORY: mlops-mlflow-image-102
+      SERVICE_NAME: mlops-mlflow-server
+      SERVICE_ACCOUNT: mlflow-server@mlops-477313.iam.gserviceaccount.com
+      CONNECTOR: mlops-vpc-connect-102
+      PORT: 5000
+    
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+      - name: Authenticate to GCP
+        uses: google-github-actions/auth@v3
+        with:
+          credentials_json: ${{ secrets.GCP_SA_KEY }}
+      - name: Setup gcloud
+        uses: google-github-actions/setup-gcloud@v3
+      - name: Configure Docker for Artifact Registry
+        run: |
+          gcloud auth configure-docker "${{ env.REGION }}-docker.pkg.dev"
+      - name: Build & Push Docker Image to Artifact Registry
+        uses: piotrkrusinski/action-google-artifact-registry@v1
+        with:
+          google_project_id: ${{ env.PROJECT_ID }}
+          google_artifact_registry_region: ${{ env.REGION }}
+          google_artifact_registry_hostname: ${{ env.REGION }}-docker.pkg.dev
+          google_artifact_registry_name: ${{ env.REPOSITORY }}
+          service_account_key: ${{ secrets.GOOGLE_APPLICATION_CREDENTIALS_B64 }}
+          dockerfile: infra/Dockerfile.mlflow
+          image_name: mlflow
+          tag_list: ${{ github.sha }}
+      - name: Deploy to Cloud Run
+        run: |
+          gcloud run deploy ${{ env.SERVICE_NAME }} \
+            --image "${{ env.REGION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.REPOSITORY }}/mlflow:${{ github.sha }}" \
+            --region ${{ env.REGION }} \
+            --vpc-connector ${{ env.CONNECTOR }} \
+            --vpc-egress all-traffic \
+            --service-account mlflow-server@${{ env.PROJECT_ID }}.iam.gserviceaccount.com \
+            --update-secrets=/secrets/credentials=${{ secrets.GCP_SA_KEY }}:latest \
+            --update-secrets=POSTGRESQL_URL=${{ secrets.DB_URL }}:latest \
+            --update-secrets=STORAGE_URL=${{ secrets.BUCKET_URL }}:latest \
+            --update-secrets=MLFLOW_ID=${{ secrets.MLFLOW_ID }}:latest \
+            --update-secrets=MLFLOW_PASS=${{ secrets.MLFLOW_PASS }}:latest \
+            --memory 2Gi \
+            --allow-unauthenticated \
+            --port ${{ env.PORT }}
