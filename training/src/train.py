@@ -1,3 +1,4 @@
+import os
 import torch
 import torch.nn as nn
 import torch.optim as optim
@@ -13,6 +14,12 @@ import numpy as np
 
 from dataset import KonIQDataset
 from model import build_model
+
+
+os.environ["MLFLOW_TRACKING_USERNAME"] = "admin"
+os.environ["MLFLOW_TRACKING_PASSWORD"] = "admin"
+
+mlflow.set_tracking_uri("")
 
 
 CSV = "training/data/koniq10k_distributions_sets.csv"
