@@ -10,7 +10,7 @@ import serving.routers.predict as predict_module
 def mock_model():
     mock_model = MagicMock()
     import torch
-    mock_model.return_value = torch.tensor([[0.5]])
+    mock_model.return_value = torch.tensor(0.5)
     mock_model.to.return_value = mock_model
     mock_model.eval.return_value = None
     return mock_model

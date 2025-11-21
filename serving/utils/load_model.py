@@ -1,8 +1,9 @@
+import os
 import torch
 import mlflow.pytorch
 
-
-mlflow.set_tracking_uri("http://127.0.0.1:5000")
+MLFLOW_TRACKING_URI = os.getenv("OUR_MLFLOW_HOST", "http://127.0.0.1:5000")
+mlflow.set_tracking_uri(uri=MLFLOW_TRACKING_URI)
 
 MODEL_NAME = "koniq_iqa_model"
 MODEL_ALIAS = "staging"

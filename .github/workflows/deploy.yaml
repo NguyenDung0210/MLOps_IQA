@@ -1,0 +1,86 @@
+name: CD
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'serving/**/*'
+      - 'infra/**/*'
+      - '.github/workflows/deploy.yaml'
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    - name: Setup Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: 3.11
+    - name: Setup Cache
+      uses: actions/cache@v3
+      with:
+        path: ~/.cache/pip
+        key: ${{ runner.os }}-pip-${{ hashFiles('requirements.txt') }}
+        restore-keys: |
+          ${{ runner.os }}-pip-
+    - name: Install dependencies
+      run: |
+        pip install -r requirements.txt
+    - name: Run tests
+      run: pytest --cov
+  
+  deploy:
+    needs: test
+    runs-on: ubuntu-latest
+
+    env:
+      REGION: us-central1
+      PROJECT_ID: mlops-477313
+      REPOSITORY: mlops-mlflow-image-102
+      SERVICE_NAME: mlops-mlflow-server
+      SERVICE_ACCOUNT: mlflow-server@mlops-477313.iam.gserviceaccount.com
+      CONNECTOR: mlops-vpc-connector-102
+      PORT: 5000
+      SA_KEY_NAME: mlflow_server_key
+    
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+      - name: Authenticate to GCP
+        uses: google-github-actions/auth@v3
+        with:
+          credentials_json: ${{ secrets.GCP_SA_KEY }}
+      - name: Setup gcloud
+        uses: google-github-actions/setup-gcloud@v3
+      - name: Configure Docker for Artifact Registry
+        run: |
+          gcloud auth configure-docker "${{ env.REGION }}-docker.pkg.dev"
+      - name: Build Docker Image
+        run: |
+          docker build \
+            -f infra/Dockerfile.mlflow \
+            -t "${{ env.REGION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.REPOSITORY }}/mlflow:${{ github.sha }}" \
+            .
+      - name: 'Push container'
+        run: |
+          docker push "${{ env.REGION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.REPOSITORY }}/mlflow:${{ github.sha }}"
+      - name: Deploy to Cloud Run
+        run: |
+          gcloud run deploy ${{ env.SERVICE_NAME }} \
+            --image "${{ env.REGION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.REPOSITORY }}/mlflow:${{ github.sha }}" \
+            --region ${{ env.REGION }} \
+            --vpc-connector ${{ env.CONNECTOR }} \
+            --vpc-egress all-traffic \
+            --service-account "${{ env.SERVICE_ACCOUNT }}" \
+            --update-secrets=/secrets/credentials="${{ env.SA_KEY_NAME }}":latest \
+            --update-secrets=MLFLOW_ALLOWED_HOSTS=mlflow_allowed_hosts:latest \
+            --update-secrets=POSTGRESQL_URL=DB_url:latest \
+            --update-secrets=STORAGE_URL=bucket_url:latest \
+            --update-secrets=MLFLOW_ID=mlflow_id:latest \
+            --update-secrets=MLFLOW_PASS=mlflow_pass:latest \
+            --memory 2Gi \
+            --allow-unauthenticated \
+            --port "${{ env.PORT }}"
