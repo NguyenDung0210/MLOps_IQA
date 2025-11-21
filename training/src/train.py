@@ -19,7 +19,7 @@ from model import build_model
 os.environ["MLFLOW_TRACKING_USERNAME"] = "admin"
 os.environ["MLFLOW_TRACKING_PASSWORD"] = "admin"
 
-mlflow.set_tracking_uri("")
+mlflow.set_tracking_uri("https://mlops-mlflow-server-586303961329.us-central1.run.app")
 
 
 CSV = "training/data/koniq10k_distributions_sets.csv"
