@@ -4,7 +4,10 @@ on:
   push:
     branches:
       - main
-      - chore/cicd-setup
+    paths:
+      - 'serving/**/*'
+      - 'infra/**/*'
+      - '.github/workflows/deploy.yaml'
 
 jobs:
   test:
