@@ -1,6 +1,8 @@
 FROM python:3.11-slim
 
-WORKDIR /
+WORKDIR /app
+
+RUN mkdir -p /tmp
 
 ENV GOOGLE_APPLICATION_CREDENTIALS='./secrets/credentials'
 
