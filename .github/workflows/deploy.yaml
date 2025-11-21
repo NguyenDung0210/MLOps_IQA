@@ -73,6 +73,7 @@ jobs:
             --vpc-egress all-traffic \
             --service-account "${{ env.SERVICE_ACCOUNT }}" \
             --update-secrets=/secrets/credentials="${{ env.SA_KEY_NAME }}":latest \
+            --update-secrets=MLFLOW_ALLOWED_HOSTS=mlflow_allowed_hosts:latest \
             --update-secrets=POSTGRESQL_URL=DB_url:latest \
             --update-secrets=STORAGE_URL=bucket_url:latest \
             --update-secrets=MLFLOW_ID=mlflow_id:latest \
