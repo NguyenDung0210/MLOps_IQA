@@ -2,8 +2,6 @@ FROM python:3.11-slim
 
 WORKDIR /app
 
-ENV GOOGLE_APPLICATION_CREDENTIALS='./secrets/credentials'
-
 COPY requirements.txt requirements.txt
 COPY infra/server.sh server.sh
 
