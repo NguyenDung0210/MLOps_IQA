@@ -2,12 +2,9 @@ FROM python:3.11-slim
 
 WORKDIR /app
 
-RUN mkdir -p /tmp
-
 ENV GOOGLE_APPLICATION_CREDENTIALS='./secrets/credentials'
 
 COPY requirements.txt requirements.txt
-COPY infra/wsgi_server.py wsgi_server.py
 COPY infra/server.sh server.sh
 
 RUN pip install --upgrade pip && pip install -r requirements.txt
