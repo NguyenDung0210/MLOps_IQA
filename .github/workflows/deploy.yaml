@@ -42,7 +42,6 @@ jobs:
       REPOSITORY: mlops-mlflow-image-102
       SERVICE_NAME: mlops-mlflow-server
       SERVICE_ACCOUNT: mlflow-server@mlops-477313.iam.gserviceaccount.com
-      BUCKET_NAME: mlops-mlflow-artifacts-102
       CONNECTOR: mlops-vpc-connector-102
       PORT: 5000
     
@@ -77,8 +76,7 @@ jobs:
             --service-account "${{ env.SERVICE_ACCOUNT }}" \
             --update-secrets=MLFLOW_ALLOWED_HOSTS=mlflow_allowed_hosts:latest \
             --update-secrets=POSTGRESQL_URL=DB_url:latest \
-            --add-volume name=mlflow-artifacts,type=cloud-storage,bucket=${{ env.BUCKET_NAME }},mount-options="implicit-dirs=false;uid=65532;gid=65532" \
-            --add-volume-mount volume=mlflow-artifacts,mount-path=/mlflow-artifacts \
+            --update-secrets=STORAGE_URL=bucket_url:latest \
             --memory 2Gi \
             --allow-unauthenticated \
             --port "${{ env.PORT }}"
