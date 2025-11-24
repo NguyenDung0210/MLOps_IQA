@@ -78,7 +78,7 @@ jobs:
     env:
       REGION: us-central1
       PROJECT_ID: mlops-477313
-      REPOSITORY: mlops-fast-image-102
+      REPOSITORY: mlops-fastapi-image-102
       SERVICE_NAME: mlops-fastapi-server
       SERVICE_ACCOUNT: fastapi-server@mlops-477313.iam.gserviceaccount.com
       PORT: 8000
