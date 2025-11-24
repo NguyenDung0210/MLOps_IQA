@@ -2,11 +2,11 @@ name: CI
 
 on:
   pull_request:
+    branches:
+      - main
     paths:
-      - 'training/**/*'
       - 'serving/**/*'
       - 'tests/**/*'
-      - 'infra/**/*'
       - '.github/workflows/test.yaml'
 
 jobs:
