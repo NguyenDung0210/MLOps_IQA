@@ -15,7 +15,7 @@ jobs:
     steps:
       - name: Validate deploy passcode
         run: |
-          if [ "${{ github.event.inputs.confirm }}" != "dung" ]; then
+          if [ "${{ github.event.inputs.confirm }}" != "${{ secrets.DEPLOY_PASS }}" ]; then
             echo "❌ Invalid confirmation. Deployment cancelled."
             exit 1
           else
