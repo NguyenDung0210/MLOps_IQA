@@ -16,9 +16,6 @@ from dataset import KonIQDataset
 from model import build_model
 
 
-os.environ["MLFLOW_TRACKING_USERNAME"] = "admin"
-os.environ["MLFLOW_TRACKING_PASSWORD"] = "admin"
-
 mlflow.set_tracking_uri("https://mlops-mlflow-server-586303961329.us-central1.run.app")
 
 
@@ -29,7 +26,8 @@ IMG = "training/data/koniq10k_512x384/"
 EPOCHS = 100
 BATCH = 16
 LR = 1e-4
-MODEL_NAME = "efficientnet_b0"  # efficientnet_b0 / resnet18 / mobilenet_v2
+WEIGHT_DECAY = 1e-5
+MODEL_NAME = "resnet18"  # efficientnet_b0 / resnet18 / mobilenet_v2
 
 
 def compute_metrics(preds, targets):
@@ -70,13 +68,14 @@ def evaluate(model, dataloader, device):
 def train():
     mlflow.set_experiment("koniq_iqa")
 
-    run_name = f"{MODEL_NAME}_lr{LR}_bs{BATCH}_ep{EPOCHS}"
+    run_name = f"{MODEL_NAME}_lr{LR}_bs{BATCH}_ep{EPOCHS}_wc{WEIGHT_DECAY}"
     with mlflow.start_run(run_name=run_name):
         mlflow.log_params({
             "model_name": MODEL_NAME,
             "epochs": EPOCHS,
             "batch_size": BATCH,
-            "lr": LR
+            "lr": LR,
+            "weight_decay": WEIGHT_DECAY
         })
 
         device = "cuda" if torch.cuda.is_available() else "cpu"
@@ -94,7 +93,7 @@ def train():
         test_dl  = DataLoader(test_ds, batch_size=BATCH, shuffle=False, num_workers=4, pin_memory=True)
 
         criterion = nn.MSELoss()
-        optimizer = optim.Adam(model.parameters(), lr=LR)
+        optimizer = torch.optim.AdamW(model.parameters(), lr=LR, weight_decay=WEIGHT_DECAY)
 
         for ep in range(EPOCHS):
             model.train()
@@ -155,24 +154,33 @@ def train():
 
         run_id = mlflow.active_run().info.run_id
         model_uri = f"runs:/{run_id}/model"
-
-        registered = mlflow.register_model(
-            model_uri=model_uri,
-            name="koniq_iqa_model"
-        )
-        print(f"\nRegistered model version: {registered.version}")
+        model_registry_name = "iqa_efficientnet_b0"
 
         client = MlflowClient()
-        client.update_model_version(
-            name="koniq_iqa_model",
-            version=registered.version,
-            description="Added to staging alias"
+        try:
+            client.create_registered_model(model_registry_name)
+        except Exception:
+            pass
+
+        mv = client.create_model_version(
+            name=model_registry_name,
+            source=model_uri,
+            run_id=run_id
         )
-        client.set_registered_model_tag(
-            name="koniq_iqa_model",
-            key="alias",
-            value="staging"
+
+        mv = client.update_model_version(
+            name=model_registry_name,
+            version=mv.version,
+            description="KONIQ10k IQA model, ready for staging"
         )
+
+        client.set_registered_model_alias(
+            name=model_registry_name,
+            alias="staging",
+            version=mv.version
+        )
+
+        print(f"Registered model {model_registry_name} version {mv.version} with alias 'staging'")
 
         
 if __name__ == "__main__":
