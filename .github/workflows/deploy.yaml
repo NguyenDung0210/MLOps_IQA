@@ -67,7 +67,6 @@ jobs:
             --update-secrets=MLFLOW_ALLOWED_HOSTS=mlflow_allowed_hosts:latest \
             --update-secrets=POSTGRESQL_URL=DB_url:latest \
             --update-secrets=STORAGE_URL=bucket_url:latest \
-            --max-request-size 128Mi \
             --memory 2Gi \
             --allow-unauthenticated \
             --port "${{ env.PORT }}"
