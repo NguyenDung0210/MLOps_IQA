@@ -27,7 +27,7 @@ EPOCHS = 100
 BATCH = 16
 LR = 1e-4
 WEIGHT_DECAY = 1e-5
-MODEL_NAME = "efficientnet_b0"  # efficientnet_b0 / resnet18 / mobilenet_v2
+MODEL_NAME = "resnet18"  # efficientnet_b0 / resnet18 / mobilenet_v2
 
 
 def compute_metrics(preds, targets):
@@ -154,7 +154,7 @@ def train():
 
         run_id = mlflow.active_run().info.run_id
         model_uri = f"runs:/{run_id}/model"
-        model_registry_name = "koniq_iqa_model"
+        model_registry_name = "iqa_efficientnet_b0"
 
         client = MlflowClient()
         try:
