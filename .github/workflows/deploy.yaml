@@ -1,39 +1,29 @@
 name: CD
 
 on:
-  push:
-    branches:
-      - main
-    paths:
-      - 'serving/**/*'
-      - 'infra/**/*'
-      - '.github/workflows/deploy.yaml'
+  workflow_dispatch:
+    inputs:
+      confirm:
+        description: "Enter the deployment passcode"
+        required: true
+        default: ""
 
 jobs:
-  test:
+  validate:
+    if: ${{ github.ref == 'refs/heads/main' }}
     runs-on: ubuntu-latest
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
-    - name: Setup Python
-      uses: actions/setup-python@v4
-      with:
-        python-version: 3.11
-    - name: Setup Cache
-      uses: actions/cache@v3
-      with:
-        path: ~/.cache/pip
-        key: ${{ runner.os }}-pip-${{ hashFiles('requirements.txt') }}
-        restore-keys: |
-          ${{ runner.os }}-pip-
-    - name: Install dependencies
-      run: |
-        pip install -r requirements.txt
-    - name: Run tests
-      run: pytest --cov
-  
-  deploy:
-    needs: test
+      - name: Validate deploy passcode
+        run: |
+          if [ "${{ github.event.inputs.confirm }}" != "${{ secrets.DEPLOY_PASS }}" ]; then
+            echo "❌ Invalid confirmation. Deployment cancelled."
+            exit 1
+          else
+            echo "✅ Passcode accepted. Starting deployment..."
+          fi
+
+  deploy_mlflow:
+    needs: validate
     runs-on: ubuntu-latest
 
     env:
@@ -51,7 +41,7 @@ jobs:
       - name: Authenticate to GCP
         uses: google-github-actions/auth@v3
         with:
-          credentials_json: ${{ secrets.GCP_SA_KEY }}
+          credentials_json: ${{ secrets.ML_SA_KEY }}
       - name: Setup gcloud
         uses: google-github-actions/setup-gcloud@v3
       - name: Configure Docker for Artifact Registry
@@ -63,7 +53,7 @@ jobs:
             -f infra/Dockerfile.mlflow \
             -t "${{ env.REGION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.REPOSITORY }}/mlflow:${{ github.sha }}" \
             .
-      - name: 'Push container'
+      - name: Push Docker Image
         run: |
           docker push "${{ env.REGION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.REPOSITORY }}/mlflow:${{ github.sha }}"
       - name: Deploy to Cloud Run
@@ -78,5 +68,50 @@ jobs:
             --update-secrets=POSTGRESQL_URL=DB_url:latest \
             --update-secrets=STORAGE_URL=bucket_url:latest \
             --memory 2Gi \
+            --allow-unauthenticated \
+            --port "${{ env.PORT }}"
+
+  deploy_fastapi:
+    needs: validate
+    runs-on: ubuntu-latest
+
+    env:
+      REGION: us-central1
+      PROJECT_ID: mlops-477313
+      REPOSITORY: mlops-fastapi-image-102
+      SERVICE_NAME: mlops-fastapi-server
+      SERVICE_ACCOUNT: fastapi-server@mlops-477313.iam.gserviceaccount.com
+      PORT: 8000
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+      - name: Authenticate to GCP
+        uses: google-github-actions/auth@v3
+        with:
+          credentials_json: ${{ secrets.FA_SA_KEY }}
+      - name: Setup gcloud
+        uses: google-github-actions/setup-gcloud@v3
+      - name: Configure Docker for Artifact Registry
+        run: |
+          gcloud auth configure-docker "${{ env.REGION }}-docker.pkg.dev"
+      - name: Build Docker Image
+        run: |
+          docker build \
+            -f infra/Dockerfile.fastapi \
+            -t "${{ env.REGION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.REPOSITORY }}/fastapi:${{ github.sha }}" \
+            .
+      - name: Push Docker Image
+        run: |
+          docker push "${{ env.REGION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.REPOSITORY }}/fastapi:${{ github.sha }}"
+      - name: Deploy to Cloud Run
+        run: |
+          gcloud run deploy ${{ env.SERVICE_NAME }} \
+            --image "${{ env.REGION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.REPOSITORY }}/fastapi:${{ github.sha }}" \
+            --region ${{ env.REGION }} \
+            --service-account ${{ env.SERVICE_ACCOUNT }} \
+            --memory 2Gi \
+            --execution-environment gen2 \
+            --cpu-boost \
             --allow-unauthenticated \
             --port "${{ env.PORT }}"

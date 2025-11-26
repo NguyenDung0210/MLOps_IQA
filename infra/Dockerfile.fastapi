@@ -3,9 +3,9 @@ FROM python:3.11-slim
 WORKDIR /app
 
 COPY requirements.txt requirements.txt
-COPY infra/server.sh server.sh
 
 RUN pip install --upgrade pip && pip install -r requirements.txt
 
-RUN chmod +x server.sh
-ENTRYPOINT ["./server.sh"]
+COPY serving/ serving/
+
+CMD ["sh", "-c", "uvicorn serving.api:app --host 0.0.0.0 --port ${PORT}"]
