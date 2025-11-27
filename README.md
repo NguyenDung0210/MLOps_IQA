@@ -29,15 +29,33 @@ The IQA models are trained on the **KONIQ-10k dataset** and support the followin
 ## 🚀 Architecture Overview
 ```mermaid
 graph TD;
-    A["Training Script (PyTorch)"] -->|Log Metrics + Model| B["MLflow Tracking Server"];
+
+    %% Training process
+    A["Training Script (PyTorch)"]
+        -->|Log metrics + upload model| B["MLflow Tracking Server (Cloud Run)"];
+
+    %% Model Registry
     B --> C["Model Registry"];
-    C -->|Alias: staging/production| D["FastAPI Inference Service"];
-    D --> E["Cloud Run - FastAPI"];
-    B --> F["Cloud Run - MLflow"];
-    
+
+    %% FastAPI loads model from registry
+    C -->|Load model via alias| D["FastAPI Inference Service (Cloud Run)"];
+
+    %% MLflow artifact storage
+    B -->|Store artifacts/models| F["Cloud Storage Bucket"];
+
+    %% Networking path to Cloud SQL
+    B --> H["Serverless VPC Connector"];
+    H --> G["VPC Network"];
+    G -->|Write metrics| E["Cloud SQL (PostgreSQL, Private IP)"];
+
+    %% Grouping inside GCP
     subgraph GCP
+        B
+        D
         E
         F
+        G
+        H
     end
 ```
 
