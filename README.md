@@ -15,6 +15,17 @@ The IQA models are trained on the **KONIQ-10k dataset** and support the followin
 
 ---
 
+## 🔗 Demo Web App
+- **Live FastAPI Web App:** https://mlops-fastapi-server-586303961329.us-central1.run.app/
+![Home UI](serving/static/home_ui.png)
+- **Prediction UI:** https://mlops-fastapi-server-586303961329.us-central1.run.app/predict-ui
+![Prediction UI](serving/static/predict_ui.png)
+
+> **Note:** The current web app allows uploading and predicting only once per page load.  
+> If you want to test multiple images, please refresh the page before uploading again.
+
+---
+
 ## 🚀 Architecture Overview
 ```mermaid
 graph TD;
