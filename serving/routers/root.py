@@ -6,4 +6,4 @@ root_router = APIRouter()
 
 @root_router.get("/", response_class=HTMLResponse)
 def root(request: Request):
-    return templates.TemplateResponse("index.html", {"request": request})
+    return templates.TemplateResponse(request, "index.html", {"request": request})
