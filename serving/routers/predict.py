@@ -1,14 +1,20 @@
 import io
 import torch
 from PIL import Image
-from fastapi import APIRouter, File, UploadFile, HTTPException
+from fastapi import APIRouter, File, UploadFile, HTTPException, Request
+from fastapi.responses import HTMLResponse
 from torchvision import transforms
 from serving.utils.load_model import load_model, device
+from serving.config import templates
 
 
 predict_router = APIRouter()
+ui_router = APIRouter()
 
-
+@ui_router.get("/predict-ui", response_class=HTMLResponse)
+async def predict_ui(request: Request):
+    return templates.TemplateResponse("predict.html", {"request": request})
+    
 model = None   # lazy load
 
 def get_model():

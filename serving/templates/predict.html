@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>IQA Prediction</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+
+<body>
+
+<div class="header-card">
+    An AI-powered image quality assessment tool
+</div>
+
+<div class="upload-container">
+
+    <div class="upload-box" id="drop-area">
+
+        <div id="upload-initial" class="upload-initial">
+            <img src="/static/upload-icon.png" class="upload-icon-img">
+            <h2>Add an image</h2>
+            <p>Click to choose a file</p>
+        </div>
+
+        <img id="preview-img" class="preview-img" style="display:none;">
+        <button id="score-btn" class="score-btn" style="display:none;">Score Image</button>
+
+        <input type="file" id="file-input" accept="image/*" hidden>
+    </div>
+
+    <div id="result" class="result"></div>
+
+</div>
+
+<div class="footer-card">
+    Powered by <strong>NTD</strong>
+</div>
+
+<script>
+const dropArea = document.getElementById("drop-area");
+const fileInput = document.getElementById("file-input");
+const uploadInitial = document.getElementById("upload-initial");
+const previewImg = document.getElementById("preview-img");
+const scoreBtn = document.getElementById("score-btn");
+const resultBox = document.getElementById("result");
+
+// Click only triggers upload BEFORE image preview
+dropArea.addEventListener("click", (e) => {
+    if (previewImg.style.display === "none") {
+        fileInput.click();
+    }
+});
+
+// When file selected → show preview
+fileInput.addEventListener("change", () => {
+    const file = fileInput.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = () => {
+        previewImg.src = reader.result;
+        previewImg.style.display = "block";
+
+        uploadInitial.style.display = "none";
+        scoreBtn.style.display = "inline-block";
+        resultBox.innerHTML = "";
+    };
+    reader.readAsDataURL(file);
+});
+
+// Score image
+scoreBtn.addEventListener("click", async () => {
+    const file = fileInput.files[0];
+    if (!file) return;
+
+    scoreBtn.disabled = true;
+    scoreBtn.innerText = "Scoring...";
+
+    const formData = new FormData();
+    formData.append("file", file);
+
+    const res = await fetch("/predict", {
+        method: "POST",
+        body: formData
+    });
+
+    const data = await res.json();
+
+    resultBox.innerHTML = `
+        <div class="score-box">
+            IQA Score: <strong>${data.quality.toFixed(2)}</strong>
+        </div>
+    `;
+
+    scoreBtn.disabled = false;
+    scoreBtn.innerText = "Score Image";
+
+    // Allow scoring another image
+    fileInput.value = "";
+});
+</script>
+
+</body>
+</html>

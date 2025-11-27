@@ -1,0 +1,284 @@
+/* ===== Background ===== */
+body {
+    margin: 0;
+    padding: 0;
+    height: 100vh;
+    background: url("/static/background.webp") no-repeat center center fixed;
+    background-size: cover;
+    font-family: Arial, sans-serif;
+    color: white;
+}
+
+/* ===== Floating Header ===== */
+.header-card {
+    position: fixed;
+    top: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+
+    width: 90%;
+    max-width: 1100px;
+    height: 70px;
+
+    background: #1c1c1c;
+    border-radius: 26px;
+    border: 1.2px solid #4b8bff;
+
+    display: flex;
+    justify-content: center;
+    align-items: center;
+
+    font-size: 22px;
+    color: #f5f5f5;
+    font-weight: 500;
+
+    box-shadow: 0 12px 28px rgba(0,0,0,0.55);
+    z-index: 100;
+}
+
+/* ===== Upload Container ===== */
+.upload-container {
+    height: calc(100vh - 120px);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    margin-top: 60px;
+}
+
+/* ===== Upload Box ===== */
+.upload-box {
+    position: relative;
+    width: 380px;
+    height: 330px;
+    background: linear-gradient(180deg, rgba(18,18,18,0.92), rgba(12,12,12,0.78));
+    border-radius: 22px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+
+    transition: .2s ease;
+    cursor: pointer;
+
+    box-shadow:
+        0 30px 60px rgba(0,0,0,0.65),
+        0 6px 20px rgba(75,139,255,0.06);
+
+    backdrop-filter: blur(4px);
+    border: 1px solid rgba(255,255,255,0.02);
+}
+
+/* Inner dashed border */
+.upload-box::before {
+    content: "";
+    position: absolute;
+    inset: 18px;
+    border-radius: 14px;
+    pointer-events: none;
+    border: 3px dashed rgba(75,139,255,0.35);
+}
+
+/* ===== Upload initial UI (centered) ===== */
+.upload-initial {
+    text-align: center;
+}
+
+.upload-icon-img {
+    width: 75px;
+    margin-bottom: 12px;
+    filter: drop-shadow(0 8px 20px rgba(0,0,0,0.35));
+}
+
+/* ===== Preview image ===== */
+.preview-img {
+    max-width: 85%;
+    max-height: 170px;
+    border-radius: 12px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.55);
+}
+
+/* ===== Score button ===== */
+.score-btn {
+    margin-top: 18px;
+    background: #4b8bff;
+    padding: 10px 22px;
+    border-radius: 10px;
+    border: none;
+    color: white;
+    font-size: 17px;
+    cursor: pointer;
+    transition: 0.18s;
+}
+
+.score-btn:hover {
+    background: #3e72d6;
+}
+
+.score-btn:disabled {
+    background: #2a2a2a;
+    cursor: not-allowed;
+}
+
+/* ===== Result box ===== */
+.result {
+    margin-top: 22px;
+    text-align: center;
+    font-size: 22px;
+}
+
+.score-box {
+    background: #1f1f1f;                 /* nền đen đặc */
+    padding: 14px 26px;
+    border-radius: 12px;
+    font-size: 20px;
+    color: #ffffff;                      /* chữ trắng nổi */
+    font-weight: 600;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.55);
+    border: 1px solid #5f8cff;
+}
+
+/* ===== Floating Footer ===== */
+.footer-card {
+    position: fixed;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+
+    background: #1c1c1c;
+    border: 1.2px solid #4b8bff;
+
+    padding: 10px 22px;
+    font-size: 16px;
+
+    border-radius: 999px; /* capsule */
+    color: #eee;
+
+    display: flex;
+    align-items: center;
+    gap: 10px;
+
+    box-shadow: 0 12px 25px rgba(0,0,0,0.55);
+    z-index: 100;
+}
+
+.footer-card strong {
+    background: linear-gradient(180deg,#ff4b4b,#d12b2b);
+    padding: 6px 10px;
+    border-radius: 999px;
+    font-size: 13px;
+    box-shadow: 0 6px 18px rgba(209,43,43,0.3);
+    color: white;
+}
+
+
+/* ===== INDEX PAGE ===== */
+.index-body {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+
+    background: url("/static/background.webp") no-repeat center center fixed;
+    background-size: cover;
+    font-family: Arial, sans-serif;
+    color: white;
+    margin: 0;
+}
+
+.index-container {
+    text-align: center;
+    width: 85%;
+    max-width: 900px; /* lớn hơn để thoáng */
+    padding: 60px 50px; /* tăng padding cho "hero card" */
+
+    background: rgba(0, 0, 0, 0.65); /* giảm trong suốt */
+    border-radius: 32px;
+    backdrop-filter: blur(6px);
+    box-shadow: 0 25px 55px rgba(0,0,0,0.65);
+}
+
+.index-title {
+    font-size: 48px;        /* chữ to hơn */
+    margin-bottom: 35px;
+    font-weight: 700;
+}
+
+.index-desc {
+    font-size: 20px;        /* to hơn và dễ đọc hơn */
+    color: #ececec;
+    margin-bottom: 25px;
+    line-height: 1.55;
+    max-width: 720px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.index-button {
+    display: inline-block;
+    padding: 16px 30px;
+    background: #4b8bff;
+    color: white;
+    margin-top: 25px;
+    border-radius: 14px;
+    font-size: 22px;
+    text-decoration: none;
+    transition: 0.18s;
+    font-weight: 600;
+}
+
+.index-button:hover {
+    background: #3e72d6;
+}
+
+/* ===== Mobile Responsive ===== */
+@media (max-width: 600px) {
+
+    .index-container {
+        width: 92%;
+        padding: 40px 20px;      /* giảm padding cho gọn */
+        max-width: 100%;
+        border-radius: 20px;
+    }
+
+    .index-title {
+        font-size: 32px;         /* giảm kích thước chữ */
+        margin-bottom: 25px;
+    }
+
+    .index-desc {
+        font-size: 16px;         /* chữ nhỏ hơn */
+        margin-bottom: 28px;
+        line-height: 1.45;
+    }
+
+    .index-button {
+        padding: 14px 22px;
+        font-size: 18px;
+    }
+
+    .upload-box {
+        width: 90%;
+        height: auto;
+        padding: 30px 20px;
+    }
+
+    .preview-img {
+        max-width: 95%;
+        max-height: 140px;
+    }
+
+    .header-card {
+        width: 94%;
+        height: 60px;
+        font-size: 14px;
+        border-radius: 20px;
+    }
+
+    .footer-card {
+        width: auto;
+        font-size: 13px;
+        padding: 8px 16px;
+        border-radius: 20px;
+    }
+}

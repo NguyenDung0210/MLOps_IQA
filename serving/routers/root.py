@@ -1,16 +1,9 @@
-from fastapi import APIRouter
+from fastapi import APIRouter, Request
 from fastapi.responses import HTMLResponse
-
+from serving.config import templates
 
 root_router = APIRouter()
 
-
 @root_router.get("/", response_class=HTMLResponse)
-def root():
-    return """
-    <html>
-        <body>
-            <h1>Welcome to IQA API</h1>
-        </body>
-    </html>
-    """
+def root(request: Request):
+    return templates.TemplateResponse("index.html", {"request": request})
