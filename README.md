@@ -45,28 +45,39 @@ graph TD;
 
 ## 📂 Project Structure
 ```
-├── infra/
+├── .github/workflows/
+│   ├── test.yaml
+│   └── deploy.yaml
+├── infra
 │   ├── Dockerfile.fastapi
 │   ├── Dockerfile.mlflow
 │   └── server.sh
-├── serving/
+├── serving
 │   ├── api.py
 │   ├── config.py
-│   ├── routers/
-│   ├── utils/
-│   ├── static/
-│   └── templates/
-├── training/
-│   ├── src/
-│   │   ├── train.py
-│   │   ├── model.py
-│   │   └── dataset.py
-├── tests/
+│   ├── routers
+│   │   ├── health.py
+│   │   ├── predict.py
+│   │   └── root.py
+│   ├── static
+│   │   └── style.css
+│   ├── templates
+│   │   ├── index.html
+│   │   └── predict.html
+│   └── utils
+│       └── load_model.py
+├── tests
+│   ├── test_health.py
+│   ├── test_predict.py
+│   └── test_root.py
+├── training
+│   └── src
+│       ├── dataset.py
+│       ├── model.py
+│       └── train.py
+├── pytest.ini
 ├── requirements.txt
-├── README.md
-└── .github/workflows/
-    ├── test.yaml
-    └── deploy.yaml
+└── README.md
 ```
 
 ---
